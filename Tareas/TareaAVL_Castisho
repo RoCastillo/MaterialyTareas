@@ -1,0 +1,339 @@
+package arboles;
+
+/**
+ *
+ * @author RCASTILLGO
+ */
+public class AVLTree <T extends Comparable<T>> extends LinkedBinarySearchTree <T> implements BinarySearchTreeADT<T>{
+    
+    NodeAVL <T> root;
+    int cont;
+
+    public AVLTree() {
+        root = null;
+        cont = 0;
+    }
+    
+    public void add (T elem){
+        NodeAVL <T> adding = new NodeAVL (elem);
+        boolean unbalanced;
+        
+        if(root == null){
+            root = adding;
+            root.setFe(0);
+            cont++;
+            return;
+        }
+        
+        NodeAVL<T> current, dad;
+        current=root;
+        dad=current;
+        while(current!=null){
+            dad=current;
+            if(elem.compareTo(current.getElem())<=0){
+                current=current.getIzq();
+            }
+            else{
+                current=current.getDer();
+            }
+        }
+        dad.cuelga(adding);
+        current.setFe(0);
+        cont++;
+        
+        current=adding;
+        unbalanced=false;
+        
+        while(current!= null && !unbalanced){
+            if(dad.getDer()== adding)
+                dad.setFe(dad.getFe()+1);
+            else
+                dad.setFe(dad.getFe()-1);
+            
+            current = dad;
+            dad =dad.getPapa();
+            
+            if(Math.abs(current.getFe()) == 2)
+                unbalanced = true;
+            
+            if (unbalanced)
+                balance(current);   
+        }
+    }
+    
+    private void balance (NodeAVL<T> current){
+        NodeAVL <T> theRoot, alfa, beta, gamma, a, b, c, d;
+        theRoot = current.getPapa();
+        
+        if(current.getFe() < -1 && current.getIzq().getFe() <= 0){
+            alfa = current;
+            beta = current.getIzq();
+            c = current.getDer();
+            a = beta.getIzq();
+            b = beta.getDer();
+            
+            beta.cuelga(a);
+            beta.cuelga(alfa);
+            alfa.cuelga(b);
+            alfa.cuelga(c);
+            
+            beta.setFe(size(beta.getDer())-size(beta.getIzq()));
+            alfa.setFe(size(alfa.getDer())-size(alfa.getIzq()));
+            
+            if(theRoot != null){
+                theRoot.cuelga(beta);
+                theRoot.setFe(size(beta.getDer()) - size(beta.getIzq()));
+            }
+            else
+                root = beta;
+            
+            return;
+            
+        }
+        else if(current.getFe() > 1 && current.getDer().getFe() >= 0){
+            alfa = current;
+            beta = current.getDer();
+            a = current.getIzq();
+            b = beta.getIzq();
+            c = beta.getDer();
+            
+            beta.cuelga(alfa);
+            beta.cuelga(c);
+            alfa.cuelga(a);
+            alfa.cuelga(b);
+            
+            beta.setFe(size(beta.getDer())-size(beta.getIzq()));
+            alfa.setFe(size(alfa.getDer())-size(alfa.getIzq()));
+            
+            if(theRoot != null){
+                theRoot.cuelga(beta);
+                theRoot.setFe(size(beta.getDer()) - size(beta.getIzq()));
+            }
+            else
+                root = beta;
+            
+            return;
+        }
+        else if(current.getFe() < -1 && current.getIzq().getFe() == 1){
+            alfa = current;
+            beta = current.getIzq();
+            d = current.getDer();
+            a = beta.getIzq();
+            gamma = beta.getDer();
+            b = gamma.getIzq();
+            c = gamma.getDer();
+            
+            gamma.cuelga(beta);
+            gamma.cuelga(alfa);
+            beta.cuelga(a);
+            beta.cuelga(b);
+            alfa.cuelga(c);
+            alfa.cuelga(d);
+            
+            gamma.setFe(size(gamma.getDer())-size(gamma.getIzq()));
+            beta.setFe(size(beta.getDer())-size(beta.getIzq()));
+            alfa.setFe(size(alfa.getDer())-size(alfa.getIzq()));
+            
+            if(theRoot != null){
+                theRoot.cuelga(gamma);
+                theRoot.setFe(size(gamma.getDer()) - size(gamma.getIzq()));
+            }
+            else
+                root = gamma;
+            
+            return;  
+        }
+        else if (current.getFe() > 1 && current.getDer().getFe() == -1){
+            alfa = current;
+            a = current.getIzq();
+            beta = current.getDer();
+            gamma = beta.getIzq();
+            d = beta.getDer();
+            b = gamma.getIzq();
+            c = gamma.getDer();
+            
+            gamma.cuelga(alfa);
+            gamma.cuelga(beta);
+            alfa.cuelga(a);
+            alfa.cuelga(b);
+            beta.cuelga(c);
+            beta.cuelga(d);
+            
+            gamma.setFe(size(gamma.getDer())-size(gamma.getIzq()));
+            beta.setFe(size(beta.getDer())-size(beta.getIzq()));
+            alfa.setFe(size(alfa.getDer())-size(alfa.getIzq()));
+            
+            if(theRoot != null){
+                theRoot.cuelga(gamma);
+                theRoot.setFe(size(gamma.getDer()) - size(gamma.getIzq()));
+            }
+            else
+                root = gamma;
+            
+            return; 
+        }
+    }
+    
+    public int size(NodeAVL <T>elem){
+       return size(elem, -1, -1);
+    } 
+    
+    private int size(NodeAVL actual, int i, int j){
+        if(actual==null)
+            return Math.max(i, j);
+        i=size(actual.getIzq(), i+1, j);
+        j=size(actual.getDer(), i, j+1);
+        return Math.max(i, j);
+    }
+    
+    public void remove (T elem){
+        NodeAVL <T> current, temp, dad;
+        boolean unbalanced;
+        current = root;
+        dad = null;
+        unbalanced = false;
+        
+        if(current == null){
+            throw new UnsupportedOperationException("Empty Tree");
+        }
+        
+        if(root.getElem().equals(elem)){ //case ROOT
+            
+            if(root.getIzq() == null && root.getDer() == null){
+                root = null;
+                cont--;
+            }
+         
+            else{
+                if(root.getIzq() == null || root.getDer() == null){
+                    if(root.getIzq() == null)
+                        root = root.getDer();
+                    else
+                        root = root.getIzq();
+                    
+                    root.setFe(0);
+                    cont--;
+                }
+            }
+            return;
+        }
+        
+        while(current!=null&&current.getElem().compareTo(elem)!=0){
+            dad=current;
+            if(elem.compareTo(current.getElem())<=0){
+                current=current.getIzq();
+            }
+            else{
+                current=current.getDer();
+            }
+        }
+        
+        if(current != null){
+            if(current.getIzq() == null && current.getDer() == null){ // case LEAF
+                
+                if(dad.getIzq().equals(current)){
+                    dad.setIzq(null);
+                }
+                else{
+                    dad.setDer(null);
+                }
+                cont--;
+            }
+
+            else if(!(current.getIzq() != null && current.getDer() != null)){//case ONE SON
+                dad.cuelga(current.getDer());
+                dad.cuelga(current.getIzq());
+                
+                dad.setFe(size(dad.getDer()) - size (dad.getIzq()));
+                cont--;
+            }
+
+            else{ //case TWO SONS
+                temp = current;
+                current = current.getDer();
+                dad = current;
+                while(current.getIzq() != null){
+                    dad = current;
+                    current = current.getIzq();
+                }
+                temp.setElem(current.getElem());
+                if(current.getDer()== null){
+                    dad.setIzq(null);
+                    dad.setFe(0);
+                }
+                
+                else{
+                    dad.cuelga(current.getDer());
+                    dad.setFe(size(current.getDer()) - size(current.getIzq()));
+                } 
+            }
+                
+            while(dad!= null && !unbalanced){
+                if(dad.getDer()== null)
+                    dad.setFe(dad.getFe()-1);
+                else 
+                    dad.setFe(dad.getFe()+1);
+
+                current = dad;
+                dad =dad.getPapa();
+
+                if(Math.abs(current.getFe()) == 2)
+                    unbalanced = true;
+
+                  
+            } 
+            
+            if (unbalanced)
+                    balance(current); 
+            
+            cont--;
+        }
+        
+        else{
+            throw new UnsupportedOperationException("Element not in Tree");
+        }
+        
+    }
+    
+    public T find (T elem){
+        if(find(elem, root) != null)
+            return elem;
+        else
+            throw new UnsupportedOperationException("Not found");
+    }
+    private T find(T elem, NodeAVL<T> node){
+        T temp = null;
+        
+        if(node == null)
+            return null;
+        if(elem.compareTo(node.getElem()) == 0)
+            return elem;
+        else if(elem.compareTo(node.getElem()) < 0)
+            temp = (T) find(elem, node.getIzq());
+        else if(elem.compareTo(node.getElem()) > 0)
+            temp = (T) find(elem, node.getDer());
+        
+        return (T) temp;
+    }
+    
+    public void printLevel(){
+        int h = size(root);
+        
+        for(int i = 1; i <= h; i++)
+            printLevel(root, i);   
+    }
+    private void printLevel(NodeAVL<T> theRoot, int i){
+        if (theRoot == null)
+            return;
+        if(i == 1){
+            System.out.println("Element: " +theRoot.getElem());
+            System.out.println("FE: " +theRoot.getFe());
+        }
+        else{
+            printLevel(theRoot.getIzq(), i-1);
+            printLevel(theRoot.getDer(), i-1);
+        }
+        
+    }
+    
+}
